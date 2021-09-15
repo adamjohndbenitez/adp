@@ -2,6 +2,7 @@ package com.changer.billcoin.controller;
 
 import com.changer.billcoin.datasets.Bill;
 import com.changer.billcoin.datasets.Coin;
+import com.changer.billcoin.exception.InvalidBillAmountException;
 import com.changer.billcoin.model.RequestChange;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,11 +20,10 @@ public class BillCoinController {
     private final AtomicInteger counter = new AtomicInteger();
     private static Map<Coin, Integer> usersChange = new EnumMap<>(Coin.class);
 
-    private static Map<Coin, Integer> coinMap;
+    private static Map<Coin, Integer> coinMap = new EnumMap<>(Coin.class);
     private static final Integer INIT_PIECES = 100;
 
     static {
-        coinMap = new EnumMap<>(Coin.class);
         // Coin value, Coin pieces, -- Coin amount
         coinMap.put(Coin.ONE, INIT_PIECES);
         coinMap.put(Coin.FIVE, INIT_PIECES);
@@ -36,9 +36,22 @@ public class BillCoinController {
         return new RequestChange(coinMap);
     }
 
+    @GetMapping("/refillCoins")
+    public RequestChange refillCoins(@RequestParam(required = false, defaultValue = "0") Integer one,
+                                     @RequestParam(required = false, defaultValue = "0") Integer five,
+                                     @RequestParam(required = false, defaultValue = "0") Integer ten,
+                                     @RequestParam(required = false, defaultValue = "0") Integer twentyFive
+    ) {
+        coinMap.put(Coin.ONE, one);
+        coinMap.put(Coin.FIVE, five);
+        coinMap.put(Coin.TEN, ten);
+        coinMap.put(Coin.TWENTY_FIVE, twentyFive);
+        return new RequestChange(coinMap);
+    }
+
     @CrossOrigin(origins = "http://localhost:8080")
     @GetMapping("/change")
-    public RequestChange requestChange(@RequestParam(required = false, defaultValue = "0") Integer bill) {
+    public RequestChange requestChange(@RequestParam(required = false, defaultValue = "0") Integer bill) throws InvalidBillAmountException {
 
         System.out.println("==== a User to request change for a given bill ====");
         // Validation first before computation
@@ -48,8 +61,7 @@ public class BillCoinController {
             if (bill.equals(b.getValue())) found++;
             // Nothing found, Bill is invalid.
             if (found == 0) {
-                System.out.println("Bill is invalid. Available bills are (1, 2, 5, 10, 20, 50, 100)");
-                return new RequestChange();
+                throw new InvalidBillAmountException("Bill is invalid. Available bills are (1, 2, 5, 10, 20, 50, 100).");
             }
         }
 
