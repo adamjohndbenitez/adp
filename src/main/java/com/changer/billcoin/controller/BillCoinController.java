@@ -9,9 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
@@ -36,6 +34,7 @@ public class BillCoinController {
         return new RequestChange(coinMap);
     }
 
+    // TODO: I think this will be a PostMapping instead of GetMapping ?
     @GetMapping("/refillCoins")
     public RequestChange refillCoins(@RequestParam(required = false, defaultValue = "0") Integer one,
                                      @RequestParam(required = false, defaultValue = "0") Integer five,
@@ -51,7 +50,10 @@ public class BillCoinController {
 
     @CrossOrigin(origins = "http://localhost:8080")
     @GetMapping("/change")
-    public RequestChange requestChange(@RequestParam(required = false, defaultValue = "0") Integer bill) throws InvalidBillAmountException {
+    public RequestChange requestChange(
+            @RequestParam(required = false, defaultValue = "0") Integer bill,
+            @RequestParam(required = false, defaultValue = "0") Boolean takeHugeFirst
+    ) throws InvalidBillAmountException {
 
         System.out.println("==== a User to request change for a given bill ====");
         // Validation first before computation
@@ -65,12 +67,19 @@ public class BillCoinController {
             }
         }
 
-        change(bill);
+        // TODO: To integrate with recursive function.
+        if (takeHugeFirst) {
+            Arrays.sort(Coin.values());
+        } else {
+            Arrays.sort(Coin.values(), Collections.reverseOrder());
+        }
 
+        change(bill);
         return new RequestChange(usersChange);
     }
 
     private void change(double nBill) {
+        // Change should be made by utilizing the least amount of coins
         recursiveCondition(nBill, Coin.ONE);
         recursiveCondition(nBill, Coin.FIVE);
         recursiveCondition(nBill, Coin.TEN);
