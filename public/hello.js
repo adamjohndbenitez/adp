@@ -1,9 +1,8 @@
 $(document).ready(function() {
     $.ajax({
-        url: "http://localhost:8080/greeting"
+        url: "http://localhost:8080/change"
     }).then(function(data, status, jqxhr) {
-       $('.greeting-id').append(data.id);
-       $('.greeting-content').append(data.content);
+       $('.change-id').append(data.change);
        console.log(jqxhr);
     });
 });

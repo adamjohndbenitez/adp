@@ -1,9 +1,8 @@
 package com.changer.billcoin.controller;
 
-import com.changer.billcoin.Greeting;
 import com.changer.billcoin.datasets.Bill;
 import com.changer.billcoin.datasets.Coin;
-import com.changer.billcoin.model.Request;
+import com.changer.billcoin.model.RequestChange;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -13,44 +12,67 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 public class BillCoinController {
-//    private static final String template = "Hello, %s!";
-//
-    private final AtomicLong counter = new AtomicLong();
-//
-//    //    @CrossOrigin(origins = "http://rest-service.guides.spring.io")
-////	@CrossOrigin(origins = "http://localhost:9000")
-//    @CrossOrigin(origins = "http://localhost:8080")
-//    @GetMapping("/change")
-//    public Greeting greeting(@RequestParam(required = false, defaultValue = "World") String name) {
-//        System.out.println("==== get greeting ====");
-//        return new Greeting(counter.incrementAndGet(), String.format(template, name));
-//    }
-//
-//    @GetMapping("/greeting-javaconfig")
-//    public Greeting greetingWithJavaconfig(@RequestParam(required = false, defaultValue = "World") String name) {
-//        System.out.println("==== in greeting ====");
-//        return new Greeting(counter.incrementAndGet(), String.format(template, name));
-//    }
 
-    private static Map<Coin, Double> coinMap = new EnumMap<>(Coin.class);
+    private final AtomicInteger counter = new AtomicInteger();
+    private static Map<Coin, Integer> usersChange = new EnumMap<>(Coin.class);
 
-    public BillCoinController() {
-        // Coin value, Coin pieces
-        coinMap.put(Coin.ONE, Coin.ONE.getValue() * 100.0);
-        coinMap.put(Coin.FIVE, Coin.FIVE.getValue() * 100.0);
-        coinMap.put(Coin.TEN, Coin.TEN.getValue() * 100.0);
-        coinMap.put(Coin.TWENTY_FIVE, Coin.TWENTY_FIVE.getValue() * 100.0);
+    private static Map<Coin, Integer> coinMap;
+    private static final Integer INIT_PIECES = 100;
+
+    static {
+        coinMap = new EnumMap<>(Coin.class);
+        // Coin value, Coin pieces, -- Coin amount
+        coinMap.put(Coin.ONE, INIT_PIECES);
+        coinMap.put(Coin.FIVE, INIT_PIECES);
+        coinMap.put(Coin.TEN, INIT_PIECES);
+        coinMap.put(Coin.TWENTY_FIVE, INIT_PIECES);
+    }
+
+    @GetMapping("/checkcoins")
+    public RequestChange checkcoins() {
+        return new RequestChange(coinMap);
     }
 
     @CrossOrigin(origins = "http://localhost:8080")
     @GetMapping("/change")
-    public Request request(@RequestParam(required = false, defaultValue = "No Value") int bill) {
+    public RequestChange requestChange(@RequestParam(required = false, defaultValue = "0") Integer bill) {
+
         System.out.println("==== a User to request change for a given bill ====");
         // Validation first before computation
-        return new Request(bill);
+        int found = 0;
+        for (Bill b : Bill.values()) {
+            // Should throw exception instead?
+            if (bill.equals(b.getValue())) found++;
+            // Nothing found, Bill is invalid.
+            if (found == 0) {
+                System.out.println("Bill is invalid. Available bills are (1, 2, 5, 10, 20, 50, 100)");
+                return new RequestChange();
+            }
+        }
+
+        change(bill);
+
+        return new RequestChange(usersChange);
+    }
+
+    private void change(double nBill) {
+        recursiveCondition(nBill, Coin.ONE);
+        recursiveCondition(nBill, Coin.FIVE);
+        recursiveCondition(nBill, Coin.TEN);
+        recursiveCondition(nBill, Coin.TWENTY_FIVE);
+    }
+
+    private void recursiveCondition(double nBill, Coin coin) {
+        if (nBill < coin.getValue()) return;
+        if (coinMap.get(coin) != 0 && nBill > coin.getValue()) {
+            coinMap.put(coin, coinMap.get(coin) - 1);
+            usersChange.put(coin, counter.incrementAndGet());
+            change(nBill - coin.getValue());
+        } else {
+            counter.set(0);
+        }
     }
 }

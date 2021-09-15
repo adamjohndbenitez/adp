@@ -12,13 +12,13 @@ public enum Bill {
     FIFTY   (50),
     HUNDRED (100);
 
-    private final int value;
+    private final Integer value;
 
-    Bill(int value) {
+    Bill(Integer value) {
         this.value = value;
     }
 
-    public int getValue() {
+    public Integer getValue() {
         return value;
     }
 }

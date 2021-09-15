@@ -2,6 +2,7 @@ package com.changer.billcoin;
 
 import java.net.URI;
 
+import com.changer.billcoin.model.RequestChange;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,41 +23,30 @@ public class GreetingIntegrationTests {
 
     @Test
     public void corsWithAnnotation() throws Exception {
-		ResponseEntity<Greeting> entity = this.restTemplate.exchange(
-				RequestEntity.get(uri("/greeting")).header(HttpHeaders.ORIGIN, "http://localhost:8080").build(),
-				Greeting.class);
-//        ResponseEntity<Greeting> entity = this.restTemplate.exchange(
-//                RequestEntity.get(uri("/greeting")).header(HttpHeaders.ORIGIN, "http://rest-service.guides.spring.io").build(),
-//                Greeting.class);
-//		ResponseEntity<Greeting> entity = this.restTemplate.exchange(
-//				RequestEntity.get(uri("/greeting")).header(HttpHeaders.ORIGIN, "http://localhost:9000").build(),
-//				Greeting.class);
+		ResponseEntity<RequestChange> entity = this.restTemplate.exchange(
+				RequestEntity.get(uri("/change?bill=1")).header(HttpHeaders.ORIGIN, "http://localhost:8080").build(),
+                RequestChange.class);
 
         assertEquals(HttpStatus.OK, entity.getStatusCode());
 
 		assertEquals("http://localhost:8080", entity.getHeaders().getAccessControlAllowOrigin());
-//        assertEquals("http://rest-service.guides.spring.io", entity.getHeaders().getAccessControlAllowOrigin());
-//		assertEquals("http://localhost:9000", entity.getHeaders().getAccessControlAllowOrigin());
 
-        Greeting greeting = entity.getBody();
-        assertEquals("Hello, World!", greeting.getContent());
+//        Greeting greeting = entity.getBody();
+//        assertEquals("Hello, World!", greeting.getContent());
     }
 
-    @Test
-    public void corsWithJavaconfig() {
-		ResponseEntity<Greeting> entity = this.restTemplate.exchange(RequestEntity.get(uri("/greeting-javaconfig"))
-				.header(HttpHeaders.ORIGIN, "http://localhost:8080").build(), Greeting.class);
-//        ResponseEntity<Greeting> entity = this.restTemplate.exchange(RequestEntity.get(uri("/greeting-javaconfig"))
-//                .header(HttpHeaders.ORIGIN, "http://rest-service.guides.spring.io").build(), Greeting.class);
+//    @Test
+//    public void corsWithJavaconfig() {
 //		ResponseEntity<Greeting> entity = this.restTemplate.exchange(RequestEntity.get(uri("/greeting-javaconfig"))
-//				.header(HttpHeaders.ORIGIN, "http://localhost:9000").build(), Greeting.class);
-        assertEquals(HttpStatus.OK, entity.getStatusCode());
-		assertEquals("http://localhost:8080", entity.getHeaders().getAccessControlAllowOrigin());
-//        assertEquals("http://rest-service.guides.spring.io", entity.getHeaders().getAccessControlAllowOrigin());
-//		assertEquals("http://localhost:9000", entity.getHeaders().getAccessControlAllowOrigin());
-        Greeting greeting = entity.getBody();
-        assertEquals("Hello, World!", greeting.getContent());
-    }
+//				.header(HttpHeaders.ORIGIN, "http://localhost:8080").build(), Greeting.class);
+//
+//        assertEquals(HttpStatus.OK, entity.getStatusCode());
+//
+//		assertEquals("http://localhost:8080", entity.getHeaders().getAccessControlAllowOrigin());
+//
+//        Greeting greeting = entity.getBody();
+//        assertEquals("Hello, World!", greeting.getContent());
+//    }
 
     private URI uri(String path) {
         return restTemplate.getRestTemplate().getUriTemplateHandler().expand(path);
