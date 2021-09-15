@@ -27,4 +27,6 @@ public class GreetingController {
         System.out.println("==== in greeting ====");
         return new Greeting(counter.incrementAndGet(), String.format(template, name));
     }
+
+
 }

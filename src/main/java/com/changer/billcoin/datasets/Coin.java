@@ -18,4 +18,6 @@ public enum Coin {
     public double getValue() {
         return value;
     }
+
+
 }
