@@ -34,20 +34,21 @@ public class BillCoinController {
         return new RequestChange(coinMap);
     }
 
-    // TODO: I think this will be a PostMapping instead of GetMapping ?
     @GetMapping("/refillCoins")
     public RequestChange refillCoins(@RequestParam(required = false, defaultValue = "0") Integer one,
                                      @RequestParam(required = false, defaultValue = "0") Integer five,
                                      @RequestParam(required = false, defaultValue = "0") Integer ten,
                                      @RequestParam(required = false, defaultValue = "0") Integer twentyFive
     ) {
-        coinMap.put(Coin.ONE, one);
-        coinMap.put(Coin.FIVE, five);
-        coinMap.put(Coin.TEN, ten);
-        coinMap.put(Coin.TWENTY_FIVE, twentyFive);
+        // FIXME: Add value to existing value. (resolved)
+        coinMap.put(Coin.ONE, coinMap.get(Coin.ONE) + one);
+        coinMap.put(Coin.FIVE, coinMap.get(Coin.FIVE) + five);
+        coinMap.put(Coin.TEN, coinMap.get(Coin.TEN) + ten);
+        coinMap.put(Coin.TWENTY_FIVE, coinMap.get(Coin.TWENTY_FIVE) + twentyFive);
         return new RequestChange(coinMap);
     }
 
+    // TODO: I think this will be a PostMapping (Put - Update) instead of GetMapping ?
     @CrossOrigin(origins = "http://localhost:8080")
     @GetMapping("/change")
     public RequestChange requestChange(
@@ -64,36 +65,38 @@ public class BillCoinController {
             // Nothing found, Bill is invalid.
             if (found == 0) {
                 throw new InvalidBillAmountException("Bill is invalid. Available bills are (1, 2, 5, 10, 20, 50, 100).");
+                // 400
             }
         }
 
         // TODO: To integrate with recursive function.
-        if (takeHugeFirst) {
-            Arrays.sort(Coin.values());
-        } else {
-            Arrays.sort(Coin.values(), Collections.reverseOrder());
-        }
 
         change(bill);
         return new RequestChange(usersChange);
     }
 
-    private void change(double nBill) {
+    private double change(double bill) {
         // Change should be made by utilizing the least amount of coins
-        recursiveCondition(nBill, Coin.ONE);
-        recursiveCondition(nBill, Coin.FIVE);
-        recursiveCondition(nBill, Coin.TEN);
-        recursiveCondition(nBill, Coin.TWENTY_FIVE);
+        double nBill = recursiveCondition(bill, Coin.TWENTY_FIVE); //least amount of coins.
+
+        if (nBill != 0.0) nBill = recursiveCondition(bill, Coin.TEN);
+        if (nBill != 0.0) nBill = recursiveCondition(bill, Coin.FIVE);
+        if (nBill != 0.0) nBill = recursiveCondition(bill, Coin.ONE);
+        // FIXME: Need to add some breaking condition to stop recursive call
+        //        when bill is almost empty.
+        return nBill;
     }
 
-    private void recursiveCondition(double nBill, Coin coin) {
-        if (nBill < coin.getValue()) return;
-        if (coinMap.get(coin) != 0 && nBill > coin.getValue()) {
+    private double recursiveCondition(double nBill, Coin coin) {
+        if (nBill < coin.getValue()) return nBill;
+        if (coinMap.get(coin) != 0 && nBill >= coin.getValue()) {
             coinMap.put(coin, coinMap.get(coin) - 1);
             usersChange.put(coin, counter.incrementAndGet());
-            change(nBill - coin.getValue());
+            double retVal = nBill - coin.getValue();
+            return change(retVal);
         } else {
             counter.set(0);
         }
+        return nBill;
     }
 }
