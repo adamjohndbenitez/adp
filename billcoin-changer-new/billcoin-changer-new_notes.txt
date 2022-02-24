@@ -1,0 +1,7 @@
+Big picture: We’re going to create a simple bill-coin changer service that manages to change a bill from request.
+ - Store employee objects in a (H2 in-memory) database
+ - Access them (via something called JPA).
+ - Wrap that with something that will allow access over the internet (called the Spring MVC layer).
+
+@Entity is a JPA annotation to make this object ready for storage in a JPA-based data store.
+
